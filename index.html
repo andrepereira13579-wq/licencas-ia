@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b2a33">
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Licenças IA">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icone-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Licenças · Agente de IA</title>
+<style>
+:root{
+--topo:#0b2a33; --topo2:#12404c; --txt:#1b2630; --sub:#5d6b78; --borda:#dfe5ea; --fundo:#eef2f4; --card:#fff;
+--ok:#14804a; --okc:#e3f4ea; --av:#a8650b; --avc:#fdf1dc; --er:#b4372b; --erc:#fbe7e4; --pe:#3b5bb5; --pec:#e8edfb; --ci:#6b7480; --cic:#eceff2;
+--prim:#156b4a;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--fundo);color:var(--txt);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+button,input,textarea,select{font:inherit}
+.topo{position:sticky;top:0;z-index:5;background:var(--topo);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 12px;display:flex;align-items:center;gap:10px}
+.topo img{width:34px;height:34px;border-radius:9px}
+.topo h1{font-size:17px;margin:0;line-height:1.15}
+.topo small{display:block;color:#9fc3c9;font-size:12px;font-weight:400}
+.topo .acoes{margin-left:auto;display:flex;gap:6px}
+.ib{background:var(--topo2);border:0;color:#fff;border-radius:10px;width:40px;height:40px;font-size:18px;cursor:pointer}
+main{padding:14px 16px calc(90px + env(safe-area-inset-bottom));max-width:720px;margin:0 auto}
+.resumo{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.res{background:var(--card);border:1px solid var(--borda);border-radius:12px;padding:9px 10px;cursor:pointer;text-align:left}
+.res b{display:block;font-size:20px}
+.res span{font-size:12px;color:var(--sub)}
+.res.sel{border-color:var(--prim);box-shadow:0 0 0 2px #156b4a33}
+.receita{grid-column:1/-1;background:var(--topo);color:#fff;border:0}
+.receita span{color:#9fc3c9}
+.busca{width:100%;padding:11px 13px;border:1px solid var(--borda);border-radius:12px;background:#fff;margin-bottom:12px}
+.cli{background:var(--card);border:1px solid var(--borda);border-radius:14px;padding:13px 14px;margin-bottom:10px}
+.cli .l1{display:flex;align-items:flex-start;gap:8px}
+.cli .nome{font-weight:700;font-size:16px}
+.cli .info{color:var(--sub);font-size:13px;margin-top:2px}
+.cod{font-family:ui-monospace,Consolas,monospace;letter-spacing:.03em}
+.chip{margin-left:auto;white-space:nowrap;font-size:12px;font-weight:700;border-radius:999px;padding:3px 9px}
+.c-ativo{background:var(--okc);color:var(--ok)}.c-vencendo{background:var(--avc);color:var(--av)}.c-vencido{background:var(--erc);color:var(--er)}
+.c-pendente{background:var(--pec);color:var(--pe)}.c-bloqueado{background:var(--cic);color:var(--ci)}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.b{border:1px solid var(--borda);background:#fff;color:var(--txt);border-radius:10px;padding:8px 12px;font-weight:600;cursor:pointer}
+.b.prim{background:var(--prim);border-color:var(--prim);color:#fff}
+.b.per{color:var(--er);border-color:#f0c6c0}
+.b:disabled{opacity:.55}
+.vazio{text-align:center;color:var(--sub);padding:30px 10px}
+.fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));background:var(--prim);color:#fff;border:0;border-radius:16px;padding:14px 18px;font-weight:700;box-shadow:0 6px 18px #0003;cursor:pointer}
+dialog{border:0;border-radius:16px;padding:0;width:min(520px,calc(100vw - 24px));color:var(--txt)}
+dialog::backdrop{background:#0008}
+.dl{padding:18px}
+.dl h2{margin:0 0 4px;font-size:18px}
+.dl .sub{color:var(--sub);font-size:13px;margin-bottom:10px}
+label{display:block;font-size:13px;color:var(--sub);margin:10px 0 4px}
+label input,label textarea,label select{display:block;width:100%;margin-top:4px;padding:10px 12px;border:1px solid var(--borda);border-radius:10px;background:#fff;color:var(--txt)}
+.rod{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.msg{font-size:13px;margin-top:8px;min-height:18px}
+.err{color:var(--er)} .okt{color:var(--ok)}
+.dias{display:flex;gap:6px;flex-wrap:wrap}
+.dias button{flex:1;min-width:64px}
+.dias button.sel{background:var(--prim);color:#fff;border-color:var(--prim)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));background:#1b2630;color:#fff;padding:10px 16px;border-radius:12px;display:none;z-index:20;max-width:90vw;text-align:center}
+.tela{max-width:460px;margin:0 auto;padding:30px 18px}
+.tela .logo{display:block;width:84px;height:84px;margin:10px auto 14px;border-radius:20px}
+.tela h2{text-align:center;margin:0 0 6px}
+.tela p{color:var(--sub);text-align:center;margin:0 0 14px;font-size:14px}
+.tela .b{width:100%;padding:12px;margin-top:12px}
+.oculto{display:none!important}
+.carregando{opacity:.5;pointer-events:none}
+</style>
+</head>
+<body>
+
+<!-- 1) primeira vez: colar o código de configuração -->
+<section id="telaConfig" class="tela oculto">
+<img class="logo" src="icone-192.png" alt="">
+<h2>Licenças no celular</h2>
+<p>No notebook, abra o <b>Licenças Agente de IA</b> &gt; <b>📱 Celular</b>, crie uma senha e copie o código. Cole aqui:</p>
+<label>Código de configuração<textarea id="cfgCodigo" rows="4" placeholder="AGIA1:..." autocomplete="off" autocapitalize="off" spellcheck="false"></textarea></label>
+<label>Senha que você criou no notebook<input id="cfgSenha" type="password" autocomplete="current-password"></label>
+<div class="msg" id="cfgMsg"></div>
+<button class="b prim" onclick="configurar()">Entrar</button>
+</section>
+
+<!-- 2) toda vez: senha -->
+<section id="telaSenha" class="tela oculto">
+<img class="logo" src="icone-192.png" alt="">
+<h2>Licenças · Agente de IA</h2>
+<p>Digite sua senha para abrir.</p>
+<label>Senha<input id="senha" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrar()"></label>
+<div class="msg" id="senhaMsg"></div>
+<button class="b prim" onclick="entrar()">Abrir</button>
+<button class="b" style="border:0;background:none;color:var(--sub);font-weight:400" onclick="esquecer()">Configurar de novo (outro código)</button>
+</section>
+
+<!-- 3) app -->
+<div id="app" class="oculto">
+<header class="topo">
+<img src="icone-192.png" alt="">
+<h1>Licenças<small>Agente de IA · <span id="status">conectando…</span></small></h1>
+<div class="acoes">
+<button class="ib" title="Atualizar" onclick="carregar()">↻</button>
+<button class="ib" title="Bloquear o app" onclick="travar()">🔒</button>
+</div>
+</header>
+<main>
+<div class="resumo" id="resumo"></div>
+<input class="busca" id="busca" type="search" placeholder="Buscar cliente, técnico, código ou telefone" oninput="desenhar()">
+<div id="lista"></div>
+</main>
+<button class="fab" onclick="abrirNovo()">+ Cliente</button>
+</div>
+
+<dialog id="dAtivar"><div class="dl">
+<h2 id="atTit">Ativar licença</h2>
+<div class="sub"><span class="cod" id="atCod"></span> · <span id="atVenc"></span></div>
+<label>Nome do cliente<input id="atNome"></label>
+<label>Telefone (WhatsApp, com DDD)<input id="atTel" inputmode="tel" placeholder="98 99999-9999"></label>
+<label>Dias de licença</label>
+<div class="dias" id="atDias"></div>
+<div class="msg" id="atMsg"></div>
+<div class="rod"><button class="b" onclick="fechar('dAtivar')">Cancelar</button><button class="b prim" id="atBt" onclick="confirmarAtivar()">Ativar</button></div>
+</div></dialog>
+
+<dialog id="dEd"><div class="dl">
+<h2>Editar cliente</h2>
+<div class="sub cod" id="edCod"></div>
+<label>Nome do cliente<input id="edNome"></label>
+<label>Telefone (WhatsApp)<input id="edTel" inputmode="tel"></label>
+<label>Observação<textarea id="edObs" rows="2"></textarea></label>
+<div class="msg" id="edMsg"></div>
+<div class="rod"><button class="b per" onclick="excluir()">Excluir</button><span style="flex:1"></span><button class="b" onclick="fechar('dEd')">Cancelar</button><button class="b prim" onclick="salvarEd()">Salvar</button></div>
+</div></dialog>
+
+<dialog id="dNovo"><div class="dl">
+<h2>Novo cliente</h2>
+<div class="sub">O código aparece no app do cliente, na tela de licença. Normalmente o cliente já aparece sozinho na lista quando abre o app.</div>
+<label>Código do computador<input id="nvCod" class="cod" placeholder="XXXX-XXXX-XXXX" autocapitalize="characters" autocomplete="off"></label>
+<label>Nome do cliente<input id="nvNome"></label>
+<label>Telefone (WhatsApp)<input id="nvTel" inputmode="tel"></label>
+<div class="msg" id="nvMsg"></div>
+<div class="rod"><button class="b" onclick="fechar('dNovo')">Cancelar</button><button class="b prim" onclick="salvarNovo()">Adicionar</button></div>
+</div></dialog>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl-fast.min.js" integrity="sha384-05+sicyRJQ56XpL4U9HJ8YbtSzFDvAg7apPKOGV6A0JsAJKFM68jp5oLnUjG5mEp" crossorigin="anonymous"></script>
+<script>
+"use strict";
+/* ============================================================
+Licenças · Agente de IA (celular)
+- Nenhum segredo fica neste arquivo. O código de configuração (gerado no notebook)
+vem criptografado com a senha do vendedor e fica só neste celular.
+- Assina as chaves de licença aqui mesmo (Ed25519), no mesmo formato do gerador do notebook.
+============================================================ */
+const $ = id => document.getElementById(id);
+const LS = "agia_licencas_cfg";
+let CFG = null, LIC = [], FILTRO = "todos", ATUAL = null, DIAS = 30;
+
+function guardar(k, v){ try{ v===null ? localStorage.removeItem(k) : localStorage.setItem(k, v); }catch(e){} }
+function ler(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function esc(s){ return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function toast(t){ const e=$("toast"); e.textContent=t; e.style.display="block"; clearTimeout(e._t); e._t=setTimeout(()=>e.style.display="none",2800); }
+function fechar(id){ $(id).close(); }
+function mostrar(qual){ ["telaConfig","telaSenha","app"].forEach(i => $(i).classList.toggle("oculto", i!==qual)); }
+
+/* ---------- criptografia do código de configuração (PBKDF2 + AES-GCM) ---------- */
+const b64d = s => Uint8Array.from(atob(s.replace(/-/g,"+").replace(/_/g,"/") + "===".slice((s.length+3)%4)), c => c.charCodeAt(0));
+const b64u = b => btoa(String.fromCharCode(...b)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+async function abrirCodigo(codigo, senha){
+const txt = codigo.trim().replace(/\s+/g,"");
+if(!txt.startsWith("AGIA1:")) throw new Error("Código inválido (ele começa com AGIA1:).");
+const p = JSON.parse(new TextDecoder().decode(b64d(txt.slice(6))));
+const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(senha), "PBKDF2", false, ["deriveKey"]);
+const chave = await crypto.subtle.deriveKey({name:"PBKDF2", salt:b64d(p.salt), iterations:p.it, hash:"SHA-256"},
+base, {name:"AES-GCM", length:256}, false, ["decrypt"]);
+let claro;
+try{ claro = await crypto.subtle.decrypt({name:"AES-GCM", iv:b64d(p.iv)}, chave, b64d(p.ct)); }
+catch(e){ throw new Error("Senha errada."); }
+return JSON.parse(new TextDecoder().decode(claro));
+}
+
+/* ---------- assinatura das licenças (igual ao gerar_licenca.py) ---------- */
+function gerarChave(cliente, codigo, ate){
+const hoje = hojeISO();
+const corpo = b64u(new TextEncoder().encode(JSON.stringify({cliente, codigo, ate, emitida: hoje})));
+const par = nacl.sign.keyPair.fromSeed(b64d(CFG.private_key));
+const ass = nacl.sign.detached(new TextEncoder().encode(corpo), par.secretKey);
+return corpo + "." + b64u(ass);
+}
+
+/* ---------- datas ---------- */
+function hojeISO(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function somaDias(iso, n){ const [a,m,d]=iso.split("-").map(Number); const x=new Date(a,m-1,d+n); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`; }
+const br = iso => iso ? iso.split("-").reverse().join("/") : "—";
+const moeda = v => Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+function rel(iso){
+if(!iso) return "nunca";
+const m=(Date.now()-new Date(iso))/6e4;
+if(m<2) return "agora"; if(m<60) return `há ${Math.round(m)} min`; if(m<1440) return `há ${Math.round(m/60)} h`;
+const d=Math.round(m/1440); return `há ${d} dia${d===1?"":"s"}`;
+}
+function situ(c){
+if(c.status==="bloqueado") return {k:"bloqueado",t:"Bloqueado"};
+if(c.status==="pendente"||!c.valida_ate) return {k:"pendente",t:"Aguardando ativação"};
+const d=Math.round((new Date(c.valida_ate+"T23:59:59")-new Date())/864e5);
+if(d<0) return {k:"vencido",t:`Vencido há ${-d} dia${d===-1?"":"s"}`,d};
+if(d<=5) return {k:"vencendo",t:`Vence em ${d} dia${d===1?"":"s"}`,d};
+return {k:"ativo",t:"Ativo",d};
+}
+
+/* ---------- servidor (Supabase) ---------- */
+async function rest(metodo, caminho, corpo, prefer){
+const h = {apikey:CFG.service_key, Authorization:"Bearer "+CFG.service_key, "Content-Type":"application/json"};
+if(prefer) h.Prefer = prefer;
+let r;
+try{ r = await fetch(CFG.url.replace(/\/$/,"") + "/rest/v1/" + caminho, {method:metodo, headers:h, body: corpo===undefined?undefined:JSON.stringify(corpo)}); }
+catch(e){ throw new Error("Sem internet ou servidor fora do ar."); }
+const t = await r.text();
+if(!r.ok) throw new Error(`Servidor respondeu ${r.status}: ${t.slice(0,200)}`);
+return t.trim() ? JSON.parse(t) : null;
+}
+const q = cod => "licencas?codigo=eq." + encodeURIComponent(cod);
+const agoraUTC = () => new Date().toISOString();
+
+async function carregar(){
+$("status").textContent = "atualizando…";
+try{
+LIC = await rest("GET", "licencas?select=*&order=criado_em.desc") || [];
+$("status").textContent = "atualizado " + new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+desenhar();
+}catch(e){ $("status").textContent = "sem conexão"; toast(e.message); }
+}
+
+/* ---------- telas ---------- */
+function desenhar(){
+const cont = {todos:LIC.length, ativo:0, vencendo:0, vencido:0, pendente:0, bloqueado:0};
+LIC.forEach(c => cont[situ(c).k]++);
+const pagantes = cont.ativo + cont.vencendo;
+const itens = [["todos","Todos"],["ativo","Ativos"],["vencendo","Vencendo"],["vencido","Vencidos"],["pendente","Aguardando"],["bloqueado","Bloqueados"]];
+$("resumo").innerHTML = itens.map(([k,t]) => `<button class="res ${FILTRO===k?"sel":""}" onclick="filtrar('${k}')"><b>${cont[k]}</b><span>${t}</span></button>`).join("")
++ (Number(CFG.preco) ? `<div class="res receita"><b>${moeda(pagantes*Number(CFG.preco))}</b><span>Receita mensal (ativos)</span></div>` : "");
+const busca = $("busca").value.trim().toLowerCase();
+const ordem = {vencido:0, vencendo:1, pendente:2, ativo:3, bloqueado:4};
+const lista = LIC.filter(c => FILTRO==="todos" || situ(c).k===FILTRO)
+.filter(c => !busca || [c.cliente,c.tecnico,c.codigo,c.telefone,c.computador,c.observacao].join(" ").toLowerCase().includes(busca))
+.sort((a,b) => ordem[situ(a).k]-ordem[situ(b).k] || String(a.valida_ate||"").localeCompare(String(b.valida_ate||"")));
+$("lista").innerHTML = lista.length ? lista.map(c => {
+const s = situ(c), cod = esc(c.codigo);
+const bloq = c.status==="bloqueado";
+return `<div class="cli">
+<div class="l1"><div><div class="nome">${esc(c.cliente || c.tecnico || "Sem nome")}</div>
+<div class="info"><span class="cod">${cod}</span>${c.telefone?" · "+esc(c.telefone):""}</div></div>
+<span class="chip c-${s.k}">${s.t}</span></div>
+<div class="info">${c.tecnico?"Técnico: "+esc(c.tecnico)+" · ":""}${c.valida_ate?"Licença até "+br(c.valida_ate)+" · ":""}visto ${rel(c.ultimo_contato)}${c.versao_app?" · v"+esc(c.versao_app):""}</div>
+${c.observacao?`<div class="info">📝 ${esc(c.observacao)}</div>`:""}
+<div class="btns">
+<button class="b prim" onclick="abrirAtivar('${cod}')">${c.valida_ate?"Renovar":"Ativar"}</button>
+${bloq?`<button class="b" onclick="desbloquear('${cod}')">Desbloquear</button>`:`<button class="b per" onclick="bloquear('${cod}')">Bloquear</button>`}
+<button class="b" onclick="cobrar('${cod}')">💬 Cobrar</button>
+<button class="b" onclick="abrirEd('${cod}')">Editar</button>
+</div></div>`;
+}).join("") : `<div class="vazio">${LIC.length?"Nenhum cliente neste filtro.":"Nenhum cliente ainda. Quando alguém instalar o Agente de IA e abrir, ele aparece aqui."}</div>`;
+}
+function filtrar(k){ FILTRO = FILTRO===k ? "todos" : k; desenhar(); }
+const porCod = cod => LIC.find(c => c.codigo===cod);
+
+/* ---------- ações ---------- */
+function abrirAtivar(cod){
+ATUAL = porCod(cod); DIAS = 30;
+$("atTit").textContent = ATUAL.valida_ate ? "Renovar licença" : "Ativar licença";
+$("atCod").textContent = cod;
+$("atVenc").textContent = ATUAL.valida_ate ? "vence " + br(ATUAL.valida_ate) : "sem licença";
+$("atNome").value = ATUAL.cliente || ATUAL.tecnico || "";
+$("atTel").value = ATUAL.telefone || "";
+$("atMsg").textContent = ""; $("atBt").disabled = false; $("atBt").textContent = ATUAL.valida_ate ? "Renovar" : "Ativar";
+desenharDias(); $("dAtivar").showModal();
+}
+function desenharDias(){
+$("atDias").innerHTML = [30,60,90,365].map(d => `<button class="b ${DIAS===d?"sel":""}" onclick="DIAS=${d};desenharDias()">${d===365?"1 ano":d+" dias"}</button>`).join("");
+const hoje = hojeISO(), base = ATUAL.valida_ate && ATUAL.valida_ate >= hoje ? ATUAL.valida_ate : hoje;
+$("atMsg").innerHTML = `Fica válida até <b>${br(somaDias(base, DIAS))}</b>${base!==hoje?" (soma ao vencimento atual)":""}.`;
+}
+async function confirmarAtivar(){
+const cod = ATUAL.codigo, hoje = hojeISO();
+const nome = $("atNome").value.trim() || ATUAL.tecnico || "Cliente";
+$("atBt").disabled = true; $("atMsg").textContent = "Gerando a licença…";
+try{
+const atual = (await rest("GET", q(cod) + "&select=valida_ate"))?.[0] || {};
+const base = atual.valida_ate && atual.valida_ate >= hoje ? atual.valida_ate : hoje;
+const ate = somaDias(base, DIAS);
+const chave = gerarChave(nome, cod, ate);
+await rest("POST", "licencas?on_conflict=codigo",
+{codigo:cod, status:"ativo", valida_ate:ate, chave, cliente:nome, telefone:$("atTel").value.trim(), atualizado_em:agoraUTC()},
+"resolution=merge-duplicates,return=minimal");
+fechar("dAtivar"); toast(`Licença de ${nome} até ${br(ate)}. O app dele libera sozinho.`); carregar();
+}catch(e){ $("atMsg").innerHTML = `<span class="err">${esc(e.message)}</span>`; $("atBt").disabled = false; }
+}
+async function mudar(cod, campos){ return rest("PATCH", q(cod), Object.assign({}, campos, {atualizado_em:agoraUTC()}), "return=minimal"); }
+async function bloquear(cod){
+const c = porCod(cod);
+if(!confirm(`Bloquear o app de ${c.cliente||c.tecnico||cod}? Ele para de funcionar na próxima vez que conectar.`)) return;
+try{ await mudar(cod, {status:"bloqueado"}); toast("Bloqueado."); carregar(); }catch(e){ toast(e.message); }
+}
+async function desbloquear(cod){
+const c = porCod(cod);
+try{ await mudar(cod, {status: c.chave ? "ativo" : "pendente"}); toast("Desbloqueado."); carregar(); }catch(e){ toast(e.message); }
+}
+async function cobrar(cod){
+const c = porCod(cod), s = situ(c);
+const nome = (c.cliente||c.tecnico||"").split(" ")[0] || "tudo bem";
+const txt = `Olá, ${nome}! Sua licença do Agente de IA (lançamento de orientações no ATeG) ${s.k==="vencido"?"venceu em "+br(c.valida_ate):s.d!=null?"vence em "+br(c.valida_ate):"está aguardando ativação"}. Para continuar usando, faça o Pix de ${moeda(CFG.preco)}${CFG.pix?" para a chave "+CFG.pix:""} e me mande o comprovante. Assim que confirmar, eu libero mais 30 dias.${CFG.vendedor?"\n"+CFG.vendedor:""}`;
+let tel = String(c.telefone||"").replace(/\D/g,"");
+if(tel && tel.length <= 11) tel = "55" + tel;
+if(tel){ location.href = `https://wa.me/${tel}?text=${encodeURIComponent(txt)}`; return; }
+if(navigator.share){ try{ await navigator.share({text:txt}); return; }catch(e){ return; } }
+try{ await navigator.clipboard.writeText(txt); toast("Mensagem copiada. Cole no WhatsApp do cliente."); }catch(e){ prompt("Copie a mensagem:", txt); }
+}
+function abrirEd(cod){ ATUAL=porCod(cod); $("edCod").textContent=cod; $("edNome").value=ATUAL.cliente||""; $("edTel").value=ATUAL.telefone||""; $("edObs").value=ATUAL.observacao||""; $("edMsg").textContent=""; $("dEd").showModal(); }
+async function salvarEd(){
+try{ await mudar(ATUAL.codigo, {cliente:$("edNome").value.trim(), telefone:$("edTel").value.trim(), observacao:$("edObs").value.trim()}); fechar("dEd"); toast("Salvo."); carregar(); }
+catch(e){ $("edMsg").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+}
+async function excluir(){
+if(!confirm("Excluir este cliente da lista? O app dele volta para 'Aguardando ativação' se abrir de novo.")) return;
+try{ await rest("DELETE", q(ATUAL.codigo)); fechar("dEd"); toast("Excluído."); carregar(); }
+catch(e){ $("edMsg").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+}
+function abrirNovo(){ ["nvCod","nvNome","nvTel"].forEach(i => $(i).value=""); $("nvMsg").textContent=""; $("dNovo").showModal(); }
+async function salvarNovo(){
+const cod = $("nvCod").value.trim().toUpperCase().replace(/\s/g,"");
+if(!/^[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}$/.test(cod)) return $("nvMsg").innerHTML = `<span class="err">Código inválido (formato XXXX-XXXX-XXXX).</span>`;
+try{ await rest("POST","licencas?on_conflict=codigo",{codigo:cod, cliente:$("nvNome").value.trim(), telefone:$("nvTel").value.trim()},"resolution=merge-duplicates,return=minimal"); fechar("dNovo"); toast("Cliente adicionado."); carregar(); }
+catch(e){ $("nvMsg").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+}
+
+/* ---------- entrar / sair ---------- */
+async function configurar(){
+const cod = $("cfgCodigo").value, senha = $("cfgSenha").value;
+$("cfgMsg").textContent = "Abrindo…";
+try{
+CFG = await abrirCodigo(cod, senha);
+guardar(LS, cod.trim().replace(/\s+/g,""));
+$("cfgCodigo").value = ""; $("cfgSenha").value = "";
+abrirApp();
+}catch(e){ $("cfgMsg").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+}
+async function entrar(){
+$("senhaMsg").textContent = "Abrindo…";
+try{ CFG = await abrirCodigo(ler(LS), $("senha").value); $("senha").value=""; $("senhaMsg").textContent=""; abrirApp(); }
+catch(e){ $("senhaMsg").innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+}
+function abrirApp(){ mostrar("app"); carregar(); clearInterval(window._t); window._t = setInterval(() => { if(!document.hidden) carregar(); }, 60000); }
+function travar(){ CFG = null; LIC = []; clearInterval(window._t); $("lista").innerHTML=""; mostrar("telaSenha"); }
+function esquecer(){ if(confirm("Apagar a configuração deste celular? Você vai precisar de um código novo do notebook.")){ guardar(LS, null); mostrar("telaConfig"); } }
+document.addEventListener("visibilitychange", () => { if(!document.hidden && CFG) carregar(); });
+
+if(!window.isSecureContext || !crypto.subtle){ document.body.innerHTML = '<p style="padding:20px">Abra este app pelo endereço https.</p>'; }
+else mostrar(ler(LS) ? "telaSenha" : "telaConfig");
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
