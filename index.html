@@ -229,13 +229,21 @@ return t.trim() ? JSON.parse(t) : null;
 const q = cod => "licencas?codigo=eq." + encodeURIComponent(cod);
 const agoraUTC = () => new Date().toISOString();
 
+let TENT = 0, TIMER_RETRY = null;
 async function carregar(){
-$("status").textContent = "atualizando…";
+clearTimeout(TIMER_RETRY);
+$("status").textContent = TENT ? "reconectando…" : "atualizando…";
 try{
 LIC = await rest("GET", "licencas?select=*&order=criado_em.desc") || [];
+TENT = 0;
 $("status").textContent = "atualizado " + new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
 desenhar();
-}catch(e){ $("status").textContent = "sem conexão"; toast(e.message); }
+}catch(e){
+if(!CFG) return;
+TENT++;
+if(TENT <= 4){ $("status").textContent = "reconectando…"; TIMER_RETRY = setTimeout(carregar, [2,4,8,15][TENT-1]*1000); return; }
+TENT = 0; $("status").textContent = "sem conexão · toque em ↻"; toast(e.message);
+}
 }
 
 /* ---------- telas ---------- */
@@ -359,7 +367,8 @@ catch(e){ $("senhaMsg").innerHTML = `<span class="err">${esc(e.message)}</span>`
 function abrirApp(){ mostrar("app"); carregar(); clearInterval(window._t); window._t = setInterval(() => { if(!document.hidden) carregar(); }, 60000); }
 function travar(){ CFG = null; LIC = []; clearInterval(window._t); $("lista").innerHTML=""; mostrar("telaSenha"); }
 function esquecer(){ if(confirm("Apagar a configuração deste celular? Você vai precisar de um código novo do notebook.")){ guardar(LS, null); mostrar("telaConfig"); } }
-document.addEventListener("visibilitychange", () => { if(!document.hidden && CFG) carregar(); });
+document.addEventListener("visibilitychange", () => { if(!document.hidden && CFG) setTimeout(carregar, 1200); });
+window.addEventListener("online", () => { if(CFG) carregar(); });
 
 if(!window.isSecureContext || !crypto.subtle){ document.body.innerHTML = '<p style="padding:20px">Abra este app pelo endereço https.</p>'; }
 else mostrar(ler(LS) ? "telaSenha" : "telaConfig");
