@@ -164,7 +164,7 @@ let CFG = null, LIC = [], FILTRO = "todos", ATUAL = null, DIAS = 30;
 function guardar(k, v){ try{ v===null ? localStorage.removeItem(k) : localStorage.setItem(k, v); }catch(e){} }
 function ler(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function esc(s){ return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-function toast(t){ const e=$("toast"); e.textContent=t; e.style.display="block"; clearTimeout(e._t); e._t=setTimeout(()=>e.style.display="none",2800); }
+function toast(t){ const e=$("toast"); e.textContent=t; e.style.display="block"; clearTimeout(e._t); e._t=setTimeout(()=>e.style.display="none", t.length>60?9000:2800); }
 function fechar(id){ $(id).close(); }
 function mostrar(qual){ ["telaConfig","telaSenha","app"].forEach(i => $(i).classList.toggle("oculto", i!==qual)); }
 
@@ -181,7 +181,9 @@ base, {name:"AES-GCM", length:256}, false, ["decrypt"]);
 let claro;
 try{ claro = await crypto.subtle.decrypt({name:"AES-GCM", iv:b64d(p.iv)}, chave, b64d(p.ct)); }
 catch(e){ throw new Error("Senha errada."); }
-return JSON.parse(new TextDecoder().decode(claro));
+const cfg = JSON.parse(new TextDecoder().decode(claro));
+for(const k of ["url","service_key","private_key"]) if(typeof cfg[k]==="string") cfg[k] = cfg[k].replace(/\s+/g,"");
+return cfg;
 }
 
 /* ---------- assinatura das licenças (igual ao gerar_licenca.py) ---------- */
@@ -219,7 +221,7 @@ const h = {apikey:CFG.service_key, Authorization:"Bearer "+CFG.service_key, "Con
 if(prefer) h.Prefer = prefer;
 let r;
 try{ r = await fetch(CFG.url.replace(/\/$/,"") + "/rest/v1/" + caminho, {method:metodo, headers:h, body: corpo===undefined?undefined:JSON.stringify(corpo)}); }
-catch(e){ throw new Error("Sem internet ou servidor fora do ar."); }
+catch(e){ let alc = "?"; try{ alc = (await fetch(CFG.url.replace(/\/$/,"") + "/rest/v1/")).status; }catch(e2){ alc = "sem resposta"; } throw new Error(`Não consegui falar com o servidor (${e.message}). Teste sem chave: ${alc}. Endereço: ${CFG.url}`); }
 const t = await r.text();
 if(!r.ok) throw new Error(`Servidor respondeu ${r.status}: ${t.slice(0,200)}`);
 return t.trim() ? JSON.parse(t) : null;
