@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgroSat — Monitoramento de fazendas por satélite</title>
+<link rel="stylesheet" href="lib/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo">◢</span> AgroSat <small>pasto e lavoura por satélite</small></div>
+  <div class="farmbar">
+    <select id="farmSelect" aria-label="Fazenda"></select>
+    <button id="btnAddFarm" class="btn ghost">+ Fazenda</button>
+    <button id="btnDelFarm" class="btn ghost icon" title="Excluir fazenda">🗑</button>
+    <button id="btnConf" class="btn ghost icon" title="Configurações">⚙</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="mapwrap">
+    <div id="map"></div>
+    <div class="layerbar" id="layerbar" hidden>
+      <div class="seg" id="layerSeg">
+        <button data-layer="rgb">Real</button>
+        <button data-layer="ndvi" class="on">NDVI</button>
+        <button data-layer="ndre">NDRE</button>
+        <button data-layer="zonas">Atenção</button>
+      </div>
+      <label class="opac">Opacidade <input type="range" id="opacity" min="0" max="100" value="90"></label>
+    </div>
+    <div class="legend" id="legend" hidden></div>
+    <div class="busy" id="busy" hidden><div class="spin"></div><span id="busyText">Processando…</span></div>
+  </section>
+
+  <section class="panel">
+    <div class="empty" id="emptyState">
+      <h2>Comece cadastrando uma fazenda</h2>
+      <p>Informe o <b>código do CAR</b>, toque no mapa sobre a fazenda ou envie o perímetro em <b>KML</b>, <b>KMZ</b>, <b>GeoJSON</b> ou <b>Shapefile (.zip)</b>. O app busca as imagens Sentinel‑2 (10 m, a cada ~5 dias) e calcula o NDVI só dentro da área.</p>
+      <button class="btn" id="btnAddFarm2">+ Cadastrar fazenda</button>
+    </div>
+
+    <div id="farmPanel" hidden>
+      <div class="farmhead">
+        <h2 id="farmName">—</h2>
+        <span class="chip" id="farmArea">— ha</span>
+      </div>
+      <div class="farmsub"><span id="farmCar"></span></div>
+      <div class="acoes"><button class="btn ghost sm" id="btnReport">📄 Relatório</button><button class="btn ghost sm" id="btnKML">⬇ KML</button><button class="btn ghost sm" id="btnMemo">📐 Memorial</button></div>
+      <nav class="tabs" id="tabs">
+        <button data-tab="imagens" class="on">Imagens</button>
+        <button data-tab="serie">Histórico</button>
+        <button data-tab="comparar">Comparar</button>
+        <button data-tab="situacao">Situação</button>
+        <button data-tab="clima">Clima</button>
+      </nav>
+
+      <div class="tab" id="tab-imagens">
+        <div class="row">
+          <label>De <input type="date" id="dFrom"></label>
+          <label>Até <input type="date" id="dTo"></label>
+        </div>
+        <label class="slider">Nuvens na cena até <b id="cloudVal">30</b>%
+          <input type="range" id="cloudMax" min="0" max="100" value="30"></label>
+        <button class="btn full" id="btnSearch">Buscar imagens</button>
+        <p class="hint" id="searchInfo"></p>
+        <div class="scenes" id="scenes"></div>
+        <div class="stats" id="stats" hidden></div>
+      </div>
+
+      <div class="tab" id="tab-serie" hidden>
+        <div class="row">
+          <label>Período
+            <select id="serieMeses">
+              <option value="6">6 meses</option>
+              <option value="12" selected>12 meses</option>
+              <option value="24">24 meses</option>
+              <option value="36">36 meses</option>
+            </select></label>
+          <label>Nuvens até
+            <select id="serieNuvem">
+              <option value="40">40%</option>
+              <option value="60" selected>60%</option>
+              <option value="80">80%</option>
+            </select></label>
+        </div>
+        <button class="btn full" id="btnSerie">Gerar histórico de NDVI</button>
+        <p class="hint">Cada ponto é a média de NDVI e NDRE dentro do perímetro, sem os pixels de nuvem e sombra. Toque num ponto para abrir a imagem.</p>
+        <div class="chartbox"><canvas id="chart"></canvas></div>
+        <div class="seriesum" id="serieSum"></div>
+      </div>
+
+      <div class="tab" id="tab-comparar" hidden>
+        <p class="hint">Busque as imagens na aba Imagens e escolha duas datas. O mapa mostra onde o NDVI subiu (verde) ou caiu (vermelho).</p>
+        <div class="row">
+          <label>Antes <select id="cmpA"></select></label>
+          <label>Depois <select id="cmpB"></select></label>
+        </div>
+        <button class="btn full" id="btnCompare">Comparar datas</button>
+        <div class="stats" id="cmpStats" hidden></div>
+      </div>
+      <div class="tab" id="tab-clima" hidden>
+        <div class="row">
+          <label>Período
+            <select id="clPer">
+              <option value="7">Últimos 7 dias</option>
+              <option value="15">Últimos 15 dias</option>
+              <option value="30" selected>Últimos 30 dias</option>
+              <option value="60">Últimos 60 dias</option>
+              <option value="90">Últimos 90 dias</option>
+              <option value="365">Últimos 12 meses</option>
+              <option value="custom">Personalizado</option>
+            </select></label>
+          <label>Soma térmica, base
+            <select id="clBase"><option value="10">10 °C</option><option value="15" selected>15 °C (capins tropicais)</option></select></label>
+        </div>
+        <div class="row" id="clCustom" hidden>
+          <label>De <input type="date" id="clIni"></label>
+          <label>Até <input type="date" id="clFim"></label>
+        </div>
+        <button class="btn full" id="clBtn">Atualizar clima</button>
+        <div id="clResumo" class="stats" style="margin-top:10px"></div>
+        <h4 class="ttl">Chuva</h4>
+        <div class="chartbox"><canvas id="clChart1"></canvas></div>
+        <h4 class="ttl">Soma térmica e temperatura</h4>
+        <div class="chartbox"><canvas id="clChart2"></canvas></div>
+        <div id="clPrev"></div>
+        <p class="hint">Dados: Open‑Meteo (modelos meteorológicos e reanálise ERA5), no centro da fazenda. Soma térmica = Σ máx(0, (Tmáx+Tmín)/2 − Tbase).</p>
+      </div>
+      <div class="tab" id="tab-situacao" hidden>
+        <p class="hint">Cruza a fazenda com CAR, SIGEF/INCRA, embargos do IBAMA, desmatamento PRODES, focos de queimada do INPE (área + 5 km ao redor) e clima.</p>
+        <button class="btn full" id="btnDiag">Verificar situação da fazenda</button>
+        <div id="diagBox" class="diag"></div>
+        <p class="hint">Dados públicos consultados na hora. Não substituem certidões oficiais.</p>
+      </div>
+    </div>
+    <footer class="foot">Imagens: Copernicus Sentinel‑2 (ESA), via catálogo Earth Search (AWS). Mapa base: Esri World Imagery.</footer>
+  </section>
+</main>
+
+<div class="modal" id="farmModal" hidden>
+  <form class="card" id="farmForm">
+    <h3>Nova fazenda</h3>
+    <label>Nome da fazenda <input id="fmName" required placeholder="Ex.: Fazenda Boa Vista"></label>
+    <div class="row">
+      <label style="flex:2">Cliente <input id="fmOwner" placeholder="Opcional"></label>
+      <label style="flex:1">Estado <select id="fmUF"></select></label>
+    </div>
+    <nav class="tabs mini" id="fmMode">
+      <button type="button" data-m="car" class="on">Código CAR</button>
+      <button type="button" data-m="pino">Tocar no mapa</button>
+      <button type="button" data-m="arq">Arquivo</button>
+    </nav>
+    <label data-for="car">Código do CAR <input id="fmCar" placeholder="MA-2110005-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"></label>
+    <p data-for="pino" class="hint" hidden>Depois de salvar, toque no mapa em cima da fazenda. O app acha o CAR daquele ponto e usa o perímetro dele.</p>
+    <label class="file" data-for="arq" hidden>Perímetro (KML, KMZ, GeoJSON ou SHP .zip)
+      <input type="file" id="fmFile" accept=".kml,.kmz,.geojson,.json,.zip"></label>
+    <p class="err" id="fmErr"></p>
+    <div class="actions">
+      <button type="button" class="btn ghost" id="fmCancel">Cancelar</button>
+      <button type="submit" class="btn" id="fmSave">Salvar</button>
+    </div>
+  </form>
+</div>
+
+<div class="modal" id="confirmModal" hidden>
+  <div class="card">
+    <h3 id="cfTitle">Confirmar</h3>
+    <p id="cfText"></p>
+    <div class="actions">
+      <button class="btn ghost" id="cfNo">Cancelar</button>
+      <button class="btn danger" id="cfYes">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="confModal" hidden>
+  <form class="card" id="confForm">
+    <h3>Configurações</h3>
+    <label>Endereço do servidor-ponte <input id="cfProxy" placeholder="https://agrosat-ponte.SEU-USUARIO.workers.dev"></label>
+    <p class="hint" id="cfProxyMsg"></p>
+    <label>Seu nome (aparece no relatório) <input id="cfNome" placeholder="Ex.: André Silva Pereira"></label>
+    <label>Empresa <input id="cfEmp" placeholder="Ex.: André Zootec"></label>
+    <label>Contato <input id="cfCont" placeholder="Telefone, e-mail ou Instagram"></label>
+    <div class="actions">
+      <button type="button" class="btn ghost" id="cfTest">Testar ponte</button>
+      <button type="button" class="btn ghost" id="cfCancel">Fechar</button>
+      <button type="submit" class="btn">Salvar</button>
+    </div>
+  </form>
+</div>
+
+<div class="modal" id="pickModal" hidden>
+  <div class="card">
+    <h3>Qual destes imóveis?</h3>
+    <div id="pickList" class="scenes"></div>
+    <div class="actions"><button class="btn ghost" id="pickCancel">Cancelar</button></div>
+  </div>
+</div>
+
+<div class="pinbar" id="pinbar" hidden>👆 Toque no mapa em cima da fazenda <button class="btn ghost sm" id="pinCancel">Cancelar</button></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="lib/leaflet.js"></script>
+<script src="lib/geotiff.js"></script>
+<script src="lib/proj4.js"></script>
+<script src="lib/chart.umd.js"></script>
+<script src="lib/togeojson.umd.js"></script>
+<script src="lib/jszip.min.js"></script>
+<script src="lib/shp.min.js"></script>
+<script src="lib/turf.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script src="dados.js"></script>
+<script src="integracao.js"></script>
+<script src="extras.js"></script>
+</body>
+</html>
